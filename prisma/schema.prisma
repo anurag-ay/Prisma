@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User{
+  id String @id @default(uuid())
+  age Int
+  name String
+  email String
+  role Role @default(BASIC)
+  writtenPosts Post[] @relation("writtenPosts")
+  favouritePosts Post[] @relation("favouritePosts")
+  userPreference UserPreference? @relation(fields: [userPreferenceId], references: [id])
+  userPreferenceId String? @unique
+
+
+  // defining block level attribute
+  @@unique([age,name]) // it means no two person can have same age and 
+  // same name.
+  @@index([email]) // on which field you want indexing this will icrearea the prefomance
+  // of searching,sorting
+}
+
+model UserPreference{
+  id String @id @default(uuid())
+  emailUpdates Boolean
+  user User?
+  
+}
+
+model Post{
+  id String @id @default(uuid())
+  title String
+  age Int
+  averageRating Float
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+  author User @relation("writtenPosts",fields: [authorId], references: [id])
+  authorId String
+  favouriteBy User? @relation("favouritePosts",fields: [favouriteById], references: [id])
+  favouriteById String?
+  categories Category[]
+
+}
+
+model Category{
+  id String @id @default(uuid())
+  name String @unique
+  posts Post[]
+
+}
+
+enum Role{
+  BASIC
+  ADMIN
+  EDITOR
+}
